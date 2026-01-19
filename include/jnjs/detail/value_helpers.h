@@ -4,6 +4,7 @@
 
 #include "fwd.h"
 #include "hedley.h"
+#include "jnjs/raw_value.h"
 #include "type_traits.h"
 #include "types.h"
 
@@ -14,6 +15,8 @@
 #endif
 
 namespace jnjs::detail {
+
+constexpr bool jsvalue_is_uint64 = std::is_same_v<JSValue, uint64_t>;
 
 constexpr bool JS_IS_IN_INT32(JSValue v) {
     const auto tag = JS_VALUE_GET_TAG(v);
@@ -91,7 +94,15 @@ template <> struct value_helpers<uint64_t> {
     static JSValue from(JSContext *c, const uint64_t &v) { return JS_NewInt64(c, static_cast<int64_t>(v)); }
 };
 
-template <> struct value_helpers<JSValue> { // lol
+template <> struct value_helpers<raw_value> {
+    static bool is(JSContext *, JSValue) { return true; }
+    static bool is_convertible(JSContext *, JSValue) { return true; }
+    static raw_value as(JSContext *c, const JSValue v) { return {JS_DupValue(c, v)}; }
+    static JSValue from(JSContext *c, const raw_value &v) { return JS_DupValue(c, v.v); }
+};
+
+template <typename T>
+struct value_helpers<T, std::enable_if_t<std::is_same_v<T, JSValue> && !jsvalue_is_uint64>> { // lol
     static bool is(JSContext *, JSValue) { return true; }
     static bool is_convertible(JSContext *, JSValue) { return true; }
     static JSValue as(JSContext *c, const JSValue v) { return JS_DupValue(c, v); }
