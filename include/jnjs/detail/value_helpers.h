@@ -7,6 +7,12 @@
 #include "type_traits.h"
 #include "types.h"
 
+#if defined(_MSC_VER) && !defined(JS_CHECK_JSVALUE) && !(defined(JS_NAN_BOXING) && JS_NAN_BOXING)
+#define JNJS_VALUE_HELPERS_CONSTEXPR
+#else
+#define JNJS_VALUE_HELPERS_CONSTEXPR constexpr
+#endif
+
 namespace jnjs::detail {
 
 constexpr bool JS_IS_IN_INT32(JSValue v) {
@@ -18,14 +24,14 @@ template <> struct value_helpers<undefined> {
     constexpr static bool is(JSContext *, const JSValue v) { return JS_VALUE_GET_TAG(v) == JS_TAG_UNDEFINED; }
     constexpr static bool is_convertible(JSContext *c, const JSValue v) { return is(c, v); }
     constexpr static undefined as(JSContext *, JSValue) { return {}; }
-    constexpr static JSValue from(JSContext *, const undefined &) { return JS_UNDEFINED; }
+    JNJS_VALUE_HELPERS_CONSTEXPR static JSValue from(JSContext *, const undefined &) { return JS_UNDEFINED; }
 };
 
 template <> struct value_helpers<null> {
     constexpr static bool is(JSContext *, const JSValue v) { return JS_VALUE_GET_TAG(v) == JS_TAG_NULL; }
     constexpr static bool is_convertible(JSContext *c, const JSValue v) { return is(c, v); }
     constexpr static null as(JSContext *, JSValue) { return {}; }
-    constexpr static JSValue from(JSContext *, const null &) { return JS_NULL; }
+    JNJS_VALUE_HELPERS_CONSTEXPR static JSValue from(JSContext *, const null &) { return JS_NULL; }
 };
 
 template <> struct value_helpers<bool> {
@@ -36,7 +42,7 @@ template <> struct value_helpers<bool> {
             return JS_VALUE_GET_INT(v) != 0;
         return JS_ToBool(c, v) != 0;
     }
-    constexpr static JSValue from(JSContext *, const bool &v) { return JS_MKVAL(JS_TAG_BOOL, v); }
+    JNJS_VALUE_HELPERS_CONSTEXPR static JSValue from(JSContext *, const bool &v) { return JS_MKVAL(JS_TAG_BOOL, v); }
 };
 
 template <> struct value_helpers<int32_t> {
@@ -49,7 +55,7 @@ template <> struct value_helpers<int32_t> {
         JS_ToInt32(c, &ret, v);
         return ret;
     }
-    constexpr static JSValue from(JSContext *, const int32_t &v) { return JS_MKVAL(JS_TAG_INT, v); }
+    JNJS_VALUE_HELPERS_CONSTEXPR static JSValue from(JSContext *, const int32_t &v) { return JS_MKVAL(JS_TAG_INT, v); }
 };
 
 template <> struct value_helpers<int64_t> {

@@ -20,12 +20,17 @@
         return *this;                                                                                                  \
     }
 
+namespace jnjs {
+template <typename Klass> struct wrapped_class_builder;
+}
+
 namespace jnjs::detail {
 
 template <typename T> struct key {
   private:
     constexpr key() = default;
     friend T;
+    friend ::jnjs::wrapped_class_builder<T>;
 };
 
 template<typename T>
